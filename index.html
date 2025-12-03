@@ -5,63 +5,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monitoring Kinerja Sales Harian</title>
     <style>
-        /* Gaya CSS (tidak ada perubahan signifikan) */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f4f4f9;
-        }
-        .container {
-            max-width: 800px;
-            margin: auto;
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        h1, h2, h3 {
-            color: #333;
-            text-align: center;
-        }
-        .date-display {
-            text-align: center;
-            font-size: 1.1em;
-            font-weight: bold;
-            margin-bottom: 20px;
-            color: #555;
-        }
+        /* Gaya CSS */
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f9; }
+        .container { max-width: 800px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
+        h1, h2, h3 { color: #333; text-align: center; }
+        .date-display { text-align: center; font-size: 1.1em; font-weight: bold; margin-bottom: 20px; color: #555; }
         /* Style untuk Total Score */
-        #score-display {
-            padding: 10px;
-            border-radius: 5px;
-            font-size: 1.5em;
-            font-weight: bold;
-            margin: 15px auto;
-            width: 70%;
-            text-align: center;
-            color: white;
-            transition: background-color 0.5s;
-        }
-        /* Warna Score */
-        .score-red {
-            background-color: #dc3545; /* Merah */
-        }
-        .score-green {
-            background-color: #28a745; /* Hijau */
-        }
+        #score-display { padding: 10px; border-radius: 5px; font-size: 1.5em; font-weight: bold; margin: 15px auto; width: 70%; text-align: center; color: white; transition: background-color 0.5s; }
+        .score-red { background-color: #dc3545; } 
+        .score-green { background-color: #28a745; } 
 
-        /* [Sisa Gaya CSS (Tabel, Tombol, Reset Section) tidak berubah] */
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
         th { background-color: #4CAF50; color: white; }
         tr:nth-child(even) { background-color: #f2f2f2; }
-        .btn-group { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; color: white; font-weight: bold; transition: background-color 0.3s; text-decoration: none; display: inline-block; }
-        .btn-group-open { background-color: #dc3545; }
+
+        /* Gaya Tombol Buka Grup */
+        .btn-group {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: white;
+            font-weight: bold;
+            transition: background-color 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-group-open { background-color: #dc3545; } 
         .btn-group-opened { background-color: #007bff; }
+        
+        /* Gaya Tombol Non-Aktif (Disabled) */
+        .btn-group.disabled, .btn-group:disabled {
+            background-color: #6c757d !important; /* Abu-abu terang */
+            cursor: not-allowed;
+            pointer-events: none; /* Mencegah klik lebih lanjut */
+        }
+        
+        /* Gaya Tombol Paste Link */
         .btn-paste { padding: 8px 15px; background-color: #ffc107; color: #333; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-left: 10px; }
         .btn-paste:hover { background-color: #e0a800; }
         .posted-link { display: block; margin-top: 5px; font-size: 0.9em; word-break: break-all; color: #0056b3; text-decoration: underline; }
         .posted-link.empty { color: #6c757d; font-style: italic; }
+        
+        /* Gaya Toggle Switch */
         .toggle-switch { position: relative; display: inline-block; width: 60px; height: 34px; }
         .toggle-switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
@@ -69,6 +56,8 @@
         input:checked + .slider { background-color: #2196F3; }
         input:focus + .slider { box-shadow: 0 0 1px #2196F3; }
         input:checked + .slider:before { transform: translateX(26px); }
+
+        /* Gaya Reset Section */
         .reset-section { margin-top: 30px; padding: 15px; border: 1px solid #dc3545; border-radius: 5px; background-color: #ffe0e3; text-align: center; }
         .reset-section button { padding: 10px 20px; background-color: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
         .reset-section button:hover { background-color: #c82333; }
@@ -104,21 +93,21 @@
             </thead>
             <tbody>
                 <tr>
-                    <td>Prospect Konsumen 1</td>
-                    <td><label class="toggle-switch"><input type="checkbox" data-key="dpack-1" data-score-item="true"><span class="slider"></span></label></td>
+                    <td>Prospect Konsumen 1 (2 Poin)</td>
+                    <td><label class="toggle-switch"><input type="checkbox" data-key="dpack-1" data-score-item="dpack"><span class="slider"></span></label></td>
                 </tr>
                 <tr>
-                    <td>Prospect Konsumen 2</td>
-                    <td><label class="toggle-switch"><input type="checkbox" data-key="dpack-2" data-score-item="true"><span class="slider"></span></label></td>
+                    <td>Prospect Konsumen 2 (2 Poin)</td>
+                    <td><label class="toggle-switch"><input type="checkbox" data-key="dpack-2" data-score-item="dpack"><span class="slider"></span></label></td>
                 </tr>
                 <tr>
-                    <td>Prospect Konsumen 3</td>
-                    <td><label class="toggle-switch"><input type="checkbox" data-key="dpack-3" data-score-item="true"><span class="slider"></span></label></td>
+                    <td>Prospect Konsumen 3 (2 Poin)</td>
+                    <td><label class="toggle-switch"><input type="checkbox" data-key="dpack-3" data-score-item="dpack"><span class="slider"></span></label></td>
                 </tr>
             </tbody>
         </table>
 
-        <h3>Link Share Facebook Groups (Total 34 Grup)</h3>
+        <h3>Link Share Facebook Groups (Total 34 Grup, Total 85 Poin)</h3>
         <table>
             <thead>
                 <tr>
@@ -135,13 +124,13 @@
             <thead>
                 <tr>
                     <th>Platform</th>
-                    <th>Link Postingan Anda</th>
+                    <th>Link Postingan Anda (5 Poin)</th>
                 </tr>
             </thead>
             <tbody>
                 <tr id="tiktok-row">
                     <td>TikTok</td>
-                    <td><input type="url" data-key="tiktok-link" data-score-item="true" placeholder="Masukkan link TikTok di sini"></td>
+                    <td><input type="url" data-key="tiktok-link" data-score-item="tiktok" placeholder="Masukkan link TikTok di sini"></td>
                 </tr>
             </tbody>
         </table>
@@ -159,20 +148,33 @@
     <script>
         // --- KONSTANTA & KONFIGURASI ---
         const facebookGroups = [
-            // [Daftar 34 grup Facebook seperti sebelumnya]
+            // Daftar 34 grup Facebook
             "https://www.facebook.com/groups/527574474067445", "https://www.facebook.com/groups/1515571062072333/buy_sell_discussion", "https://www.facebook.com/groups/424561451062924/buy_sell_discussion", "https://www.facebook.com/groups/744234105620854/buy_sell_discussion", "https://www.facebook.com/groups/1060389500826790", "https://www.facebook.com/groups/1729918277275906/buy_sell_discussion", "https://www.facebook.com/groups/1431901727109664/buy_sell_discussion", "https://www.facebook.com/groups/1695737604019910", "https://www.facebook.com/groups/1634984163405391/buy_sell_discussion", "https://www.facebook.com/groups/312606212267575/buy_sell_discussion", "https://www.facebook.com/groups/1415145062121908/buy_sell_discussion", "https://www.facebook.com/groups/2560913867495115", "https://www.facebook.com/groups/1123248414458055/", "https://www.facebook.com/groups/262810247145987/buy_sell_discussion", "https://www.facebook.com/groups/bursa.aneka.barang/buy_sell_discussion", "https://www.facebook.com/groups/FJBMADIUNCARUBAN/buy_sell_discussion", "https://www.facebook.com/groups/fjbhplaptopmadiun/buy_sell_discussion", "https://www.facebook.com/groups/Marketplace.Madiun", "https://www.facebook.com/groups/1591483817835345", "https://www.facebook.com/groups/pasarbebasngawi/buy_sell_discussion", "https://www.facebook.com/groups/216931985170794/buy_sell_discussion", "https://www.facebook.com/groups/1676570569220636", "https://www.facebook.com/groups/1026579334448278", "https://www.facebook.com/groups/124689993612", "https://www.facebook.com/groups/553815878020170/buy_sell_discussion", "https://www.facebook.com/groups/1555364204778064/buy_sell_discussion/", "https://www.facebook.com/groups/eksmadiun/buy_sell_discussion", "https://www.facebook.com/groups/fjb.madiun.new", "https://www.facebook.com/groups/1297900247227735", "https://www.facebook.com/groups/1522563978000287/buy_sell_discussion", "https://www.facebook.com/groups/1123248414458055", "https://www.facebook.com/groups/1494489857431925/buy_sell_discussion", "https://www.facebook.com/groups/655243929383434", "https://www.facebook.com/groups/2278368475734080/"
         ];
 
         const STORAGE_PREFIX = "sales_monitor_";
         const RESET_PASSWORD = "M@diun23";
-        const LAST_RESET_KEY = STORAGE_PREFIX + "last_reset_date"; // Key baru untuk menyimpan tanggal reset
-        const RESET_HOUR = 1; // Jam 01:00
-        const SCORE_PER_ITEM = 3; 
-        const MIN_GREEN_SCORE = 90;
+        const LAST_RESET_KEY = STORAGE_PREFIX + "last_reset_date"; 
+        const RESET_HOUR = 1; 
+        const MIN_GREEN_SCORE = 80;
+        
+        // --- KONFIGURASI SKOR BARU ---
+        const SCORE_CONFIG = {
+            D_PACK: 2,
+            FACEBOOK_TOTAL: 85,
+            TIKTOK: 5
+        };
+        const MAX_FACEBOOK_ITEMS = facebookGroups.length; // 34
+        const MAX_D_PACK_ITEMS = 3;
+        const FACEBOOK_SCORE_PER_ITEM = SCORE_CONFIG.FACEBOOK_TOTAL / MAX_FACEBOOK_ITEMS; // 85 / 34 ≈ 2.5
+        
+        // Total Maksimal: (3*2) + 85 + 5 = 96
+        const MAX_ACTUAL_SCORE = (MAX_D_PACK_ITEMS * SCORE_CONFIG.D_PACK) + SCORE_CONFIG.FACEBOOK_TOTAL + SCORE_CONFIG.TIKTOK; // 96
+        const SCORE_FACTOR = 100 / MAX_ACTUAL_SCORE; 
 
-        // TOTAL ITEM: 3 D-Pack + 34 Grup FB + 1 TikTok = 38 item
-        const MAX_ACTUAL_SCORE = 38 * SCORE_PER_ITEM; // 114
-        const SCORE_FACTOR = 100 / MAX_ACTUAL_SCORE; // 100 / 114
+        // KONSTANTA BARU UNTUK LOGIKA KLIK TOMBOL GRUP
+        const MAX_GROUP_CLICKS = 11;
+        const GROUP_CLICKS_COUNT_KEY = STORAGE_PREFIX + "group_click_count";
 
 
         // --- FUNGSI TANGGAL & WAKTU ---
@@ -184,19 +186,14 @@
         
         function getMidnightToday(hour = 0, minute = 0) {
             const now = new Date();
-            const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, minute, 0);
-            return midnight;
+            return new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, minute, 0);
         }
 
-        // --- FUNGSI AUTO-RESET ---
         function checkAutoReset() {
             const lastReset = localStorage.getItem(LAST_RESET_KEY);
             const now = new Date();
             
-            // Tentukan waktu reset hari ini (01:00)
             const resetTimeToday = getMidnightToday(RESET_HOUR, 0);
-
-            // Tentukan waktu reset kemarin (01:00)
             const resetTimeYesterday = new Date(resetTimeToday);
             resetTimeYesterday.setDate(resetTimeYesterday.getDate() - 1);
             
@@ -205,54 +202,58 @@
             if (lastReset) {
                 const lastResetDate = new Date(lastReset);
                 
-                // Jika waktu sekarang sudah melewati jam reset hari ini (01:00)
                 if (now >= resetTimeToday) {
-                    // Cek apakah reset terakhir dilakukan sebelum jam reset hari ini
                     if (lastResetDate < resetTimeToday) {
                         shouldReset = true;
                     }
                 } else {
-                    // Jika waktu sekarang masih di antara 00:00 - 01:00
-                    // Cek apakah reset terakhir dilakukan sebelum jam reset kemarin
                     if (lastResetDate < resetTimeYesterday) {
                         shouldReset = true;
                     }
                 }
-
             } else {
-                // Jika belum pernah ada catatan reset, reset jika sudah melewati 01:00
                 if (now >= resetTimeToday) {
                      shouldReset = true;
                 }
             }
             
             if (shouldReset) {
-                runReset(true); // Jalankan reset otomatis
+                runReset(true); 
             }
         }
         
-        // --- FUNGSI SCORE (Tidak Berubah) ---
+        // --- FUNGSI SCORE (Diperbarui dengan Bobot Baru) ---
 
         function calculateScore() {
-            let completedItems = 0;
-            document.querySelectorAll('[data-score-item="true"]').forEach(element => {
+            let actualScore = 0;
+            let fbLinkCount = 0;
+            
+            // 1. Hitung D-Pack dan TikTok 
+            document.querySelectorAll('[data-score-item]').forEach(element => {
+                const type = element.getAttribute('data-score-item');
                 const key = element.getAttribute('data-key');
                 const storedValue = localStorage.getItem(STORAGE_PREFIX + key);
-                if (element.type === 'checkbox' && storedValue === 'true') {
-                    completedItems++;
-                } else if (element.type === 'url' && storedValue && storedValue.trim() !== "") {
-                    completedItems++;
+
+                if (type === 'dpack' && storedValue === 'true') {
+                    actualScore += SCORE_CONFIG.D_PACK; // 2 Poin
+                } else if (type === 'tiktok' && storedValue && storedValue.trim() !== "") {
+                    actualScore += SCORE_CONFIG.TIKTOK; // 5 Poin
                 }
             });
+
+            // 2. Hitung Grup Facebook Link
             facebookGroups.forEach((url, index) => {
                 const keyLink = `fb-link-${index}`;
                 const storedLink = localStorage.getItem(STORAGE_PREFIX + keyLink);
                 if (storedLink && storedLink.trim() !== "") {
-                    completedItems++;
+                    fbLinkCount++;
                 }
             });
-
-            const actualScore = completedItems * SCORE_PER_ITEM;
+            
+            // Tambahkan skor Facebook total (85 Poin dibagi rata)
+            actualScore += fbLinkCount * FACEBOOK_SCORE_PER_ITEM; 
+            
+            // Konversi score aktual ke skala 100
             let displayedScore = Math.round(actualScore * SCORE_FACTOR);
             if (displayedScore > 100) displayedScore = 100; 
 
@@ -271,11 +272,19 @@
             }
         }
 
-        // --- FUNGSI FACEBOOK (Tidak Berubah Signifikan) ---
+        // --- FUNGSI FACEBOOK (Ditambahkan Logika Tombol) ---
+
+        function checkGroupClickStatus() {
+            const count = parseInt(localStorage.getItem(GROUP_CLICKS_COUNT_KEY) || '0', 10);
+            return count >= MAX_GROUP_CLICKS;
+        }
 
         function populateFacebookTable() {
             const tableBody = document.getElementById('facebook-links');
             tableBody.innerHTML = ''; 
+            
+            const isLimitReached = checkGroupClickStatus();
+
             facebookGroups.forEach((url, index) => {
                 const row = tableBody.insertRow();
                 const keyOpened = `fb-opened-${index}`;
@@ -286,8 +295,25 @@
                 cellGroup.textContent = groupName.replace('buy_sell_discussion', 'Diskusi Jual-Beli'); 
                 
                 const cellActions = row.insertCell(1);
-                const openedClass = localStorage.getItem(STORAGE_PREFIX + keyOpened) === 'true' ? 'btn-group-opened' : 'btn-group-open';
-                cellActions.innerHTML += `<a href="${url}" target="_blank" class="btn-group ${openedClass}" data-key="${keyOpened}" onclick="markGroupOpened(event)">Buka Grup</a>`;
+                
+                // Cek apakah tombol sudah diklik sebelumnya
+                const isOpened = localStorage.getItem(STORAGE_PREFIX + keyOpened) === 'true';
+                const openedClass = isOpened ? 'btn-group-opened' : 'btn-group-open';
+                
+                // Tambahkan kelas disabled jika limit sudah tercapai
+                const disabledClass = isLimitReached ? 'disabled' : '';
+
+                // Tombol Buka Grup (Non-aktif jika limit 11 sudah tercapai)
+                cellActions.innerHTML += `
+                    <a href="${url}" target="_blank" class="btn-group ${openedClass} ${disabledClass}" 
+                       data-key="${keyOpened}" 
+                       data-index="${index}"
+                       onclick="markGroupOpened(event)">
+                       Buka Grup
+                    </a>
+                `;
+
+                // Tombol Paste Link Postingan
                 cellActions.innerHTML += `<button class="btn-paste" onclick="pasteLinkPrompt('${keyLink}')">Paste Link</button>`;
                 
                 const storedLink = localStorage.getItem(STORAGE_PREFIX + keyLink);
@@ -300,10 +326,35 @@
         function markGroupOpened(event) {
             const button = event.currentTarget;
             const key = button.getAttribute('data-key');
+            
+            // Cek apakah tombol sudah diklik atau sudah disabled
+            if (button.classList.contains('btn-group-opened') || button.classList.contains('disabled')) {
+                return; // Abaikan klik
+            }
+
+            // Tambahkan hitungan klik jika ini adalah klik pertama untuk tombol ini
+            const currentCount = parseInt(localStorage.getItem(GROUP_CLICKS_COUNT_KEY) || '0', 10);
+            localStorage.setItem(GROUP_CLICKS_COUNT_KEY, currentCount + 1);
+
+            // Ubah tampilan tombol menjadi biru
             button.classList.remove('btn-group-open');
             button.classList.add('btn-group-opened');
             localStorage.setItem(STORAGE_PREFIX + key, 'true');
+
+            // Cek status setelah klik
+            if (currentCount + 1 >= MAX_GROUP_CLICKS) {
+                // Nonaktifkan semua tombol Buka Grup
+                alert(`Selamat, Anda telah membuka ${MAX_GROUP_CLICKS} grup! Semua tombol "Buka Grup" telah dinonaktifkan.`);
+                disableAllGroupButtons();
+            }
         }
+        
+        function disableAllGroupButtons() {
+            document.querySelectorAll('.btn-group').forEach(btn => {
+                btn.classList.add('disabled');
+            });
+        }
+
 
         function pasteLinkPrompt(keyLink) {
             const currentLink = localStorage.getItem(STORAGE_PREFIX + keyLink) || '';
@@ -312,6 +363,7 @@
             if (link !== null && link.trim() !== "") {
                 const fullKey = STORAGE_PREFIX + keyLink;
                 const isNewLink = localStorage.getItem(fullKey) === null || localStorage.getItem(fullKey) === "";
+
                 localStorage.setItem(fullKey, link);
 
                 const displayElement = document.getElementById(`display-${keyLink}`);
@@ -325,6 +377,7 @@
             } else if (link === "") {
                 const fullKey = STORAGE_PREFIX + keyLink;
                 const wasLinkPresent = localStorage.getItem(fullKey) !== null && localStorage.getItem(fullKey) !== "";
+
                 localStorage.removeItem(fullKey);
 
                 const displayElement = document.getElementById(`display-${keyLink}`);
@@ -338,21 +391,20 @@
         }
 
 
-        // --- FUNGSI RESET DATA ---
+        // --- FUNGSI RESET DATA (Diperbarui untuk Reset Klik Grup) ---
         
-        // Fungsi utama untuk menjalankan reset (baik manual maupun otomatis)
         function runReset(isAuto) {
-            // Hapus semua data yang tersimpan
             Object.keys(localStorage).forEach(key => {
                 if (key.startsWith(STORAGE_PREFIX) && key !== LAST_RESET_KEY) {
                     localStorage.removeItem(key);
                 }
             });
             
-            // Catat waktu reset
+            // Reset hitungan klik grup saat reset
+            localStorage.removeItem(GROUP_CLICKS_COUNT_KEY);
+
             localStorage.setItem(LAST_RESET_KEY, new Date().toISOString());
 
-            // Muat ulang halaman untuk menampilkan data kosong
             location.reload(); 
             
             if (isAuto) {
@@ -362,18 +414,17 @@
             }
         }
 
-        // Fungsi yang dipanggil tombol Reset Manual
         function resetDataManual() {
             const password = prompt("Masukkan password untuk mereset semua data:");
             if (password === RESET_PASSWORD) {
-                runReset(false); // Jalankan reset manual
+                runReset(false); 
             } else if (password !== null) {
                 alert("❌ Password salah. Data tidak direset.");
             }
         }
 
 
-        // --- FUNGSI UMUM (Tidak Berubah) ---
+        // --- FUNGSI UMUM ---
         function saveInput(event) {
             const element = event.target;
             const key = element.getAttribute('data-key');
@@ -386,7 +437,7 @@
             if (key) {
                 localStorage.setItem(STORAGE_PREFIX + key, value);
             }
-            if (element.getAttribute('data-score-item') === 'true') {
+            if (element.getAttribute('data-score-item')) {
                 calculateScore(); 
             }
         }
@@ -411,16 +462,13 @@
 
         // --- INISIALISASI ---
         document.addEventListener('DOMContentLoaded', () => {
-            // Cek dan jalankan auto-reset sebelum memuat data
             checkAutoReset(); 
-            
-            // Muat tampilan
             displayCurrentDate(); 
             populateFacebookTable(); 
             loadData(); 
 
-            // Tambahkan event listener
-            document.querySelectorAll('[data-score-item="true"]').forEach(element => {
+            // Tambahkan event listener untuk input D-Pack dan TikTok
+            document.querySelectorAll('[data-score-item]').forEach(element => {
                 element.addEventListener('change', saveInput);
                 element.addEventListener('input', saveInput); 
             });
