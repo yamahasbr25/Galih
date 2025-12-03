@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monitoring Kinerja Sales Harian</title>
     <style>
-        /* Gaya CSS Dasar */
+        /* Gaya CSS (tidak ada perubahan signifikan) */
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
@@ -23,7 +23,6 @@
             color: #333;
             text-align: center;
         }
-        /* Style untuk menampilkan Tanggal */
         .date-display {
             text-align: center;
             font-size: 1.1em;
@@ -119,9 +118,8 @@
             font-style: italic;
         }
 
-        /* Gaya Toggle Switch (D-Pack) */
+        /* Gaya Toggle Switch */
         .toggle-switch {
-            /* ... (gaya toggle switch tidak berubah) ... */
             position: relative;
             display: inline-block;
             width: 60px;
@@ -203,7 +201,7 @@
 
     <div class="container">
         <h1>🗓️ Monitoring Kinerja Sales Harian</h1>
-        <h1>GALIH</h1>
+        
         <div id="current-date" class="date-display"></div>
         
         <div id="score-display"></div>
@@ -236,7 +234,7 @@
             </tbody>
         </table>
 
-        <h3>Link Share Facebook Groups</h3>
+        <h3>Link Share Facebook Groups (Total 34 Grup)</h3>
         <table>
             <thead>
                 <tr>
@@ -277,6 +275,7 @@
     <script>
         // --- KONSTANTA & KONFIGURASI ---
         const facebookGroups = [
+            // --- DAFTAR LAMA (24 Grup) ---
             "https://www.facebook.com/groups/527574474067445",
             "https://www.facebook.com/groups/1515571062072333/buy_sell_discussion",
             "https://www.facebook.com/groups/424561451062924/buy_sell_discussion",
@@ -288,7 +287,31 @@
             "https://www.facebook.com/groups/1634984163405391/buy_sell_discussion",
             "https://www.facebook.com/groups/312606212267575/buy_sell_discussion",
             "https://www.facebook.com/groups/1415145062121908/buy_sell_discussion",
-            "https://www.facebook.com/groups/2560913867495115"
+            "https://www.facebook.com/groups/2560913867495115",
+            "https://www.facebook.com/groups/1123248414458055/",
+            "https://www.facebook.com/groups/262810247145987/buy_sell_discussion",
+            "https://www.facebook.com/groups/bursa.aneka.barang/buy_sell_discussion",
+            "https://www.facebook.com/groups/FJBMADIUNCARUBAN/buy_sell_discussion",
+            "https://www.facebook.com/groups/fjbhplaptopmadiun/buy_sell_discussion",
+            "https://www.facebook.com/groups/Marketplace.Madiun",
+            "https://www.facebook.com/groups/1591483817835345",
+            "https://www.facebook.com/groups/pasarbebasngawi/buy_sell_discussion",
+            "https://www.facebook.com/groups/216931985170794/buy_sell_discussion",
+            "https://www.facebook.com/groups/1676570569220636",
+            "https://www.facebook.com/groups/1026579334448278",
+            "https://www.facebook.com/groups/124689993612",
+
+            // --- DAFTAR BARU (10 Grup) ---
+            "https://www.facebook.com/groups/553815878020170/buy_sell_discussion",
+            "https://www.facebook.com/groups/1555364204778064/buy_sell_discussion/",
+            "https://www.facebook.com/groups/eksmadiun/buy_sell_discussion",
+            "https://www.facebook.com/groups/fjb.madiun.new",
+            "https://www.facebook.com/groups/1297900247227735",
+            "https://www.facebook.com/groups/1522563978000287/buy_sell_discussion",
+            "https://www.facebook.com/groups/1123248414458055",
+            "https://www.facebook.com/groups/1494489857431925/buy_sell_discussion",
+            "https://www.facebook.com/groups/655243929383434",
+            "https://www.facebook.com/groups/2278368475734080/"
         ];
 
         const STORAGE_PREFIX = "sales_monitor_";
@@ -296,14 +319,9 @@
         const SCORE_PER_ITEM = 3; 
         const MIN_GREEN_SCORE = 90;
 
-        // Total item yang bernilai score:
-        // 3 D-Pack + 12 Grup FB + 1 TikTok = 16 item
-        const MAX_SCORE = 16 * SCORE_PER_ITEM; // MAX_SCORE = 48
-        
-        // Catatan: Karena total item adalah 16, total score maksimal adalah 48.
-        // Asumsi, tujuan 100 adalah target motivasi, tapi perhitungan akan berdasarkan 48.
-        // Untuk mencapai target visual 100, kita akan mengali score aktual dengan 100/48 (faktor pembesar).
-        const SCORE_FACTOR = 100 / 48;
+        // TOTAL ITEM TERBARU: 3 D-Pack + 34 Grup FB + 1 TikTok = 38 item
+        const MAX_ACTUAL_SCORE = 38 * SCORE_PER_ITEM; // MAX_ACTUAL_SCORE = 114
+        const SCORE_FACTOR = 100 / MAX_ACTUAL_SCORE; // 100 / 114
 
 
         // --- FUNGSI TANGGAL ---
@@ -319,7 +337,7 @@
         function calculateScore() {
             let completedItems = 0;
 
-            // 1. Hitung D-Pack dan TikTok (item dengan data-score-item="true")
+            // 1. Hitung D-Pack dan TikTok 
             document.querySelectorAll('[data-score-item="true"]').forEach(element => {
                 const key = element.getAttribute('data-key');
                 const storedValue = localStorage.getItem(STORAGE_PREFIX + key);
@@ -331,7 +349,7 @@
                 }
             });
 
-            // 2. Hitung Grup Facebook (link postingan)
+            // 2. Hitung Grup Facebook
             facebookGroups.forEach((url, index) => {
                 const keyLink = `fb-link-${index}`;
                 const storedLink = localStorage.getItem(STORAGE_PREFIX + keyLink);
@@ -341,7 +359,7 @@
             });
 
             const actualScore = completedItems * SCORE_PER_ITEM;
-            // Konversi score aktual ke skala 100 untuk display
+            // Konversi score aktual ke skala 100
             let displayedScore = Math.round(actualScore * SCORE_FACTOR);
             
             // Pastikan tidak melebihi 100
@@ -363,10 +381,12 @@
             }
         }
 
-        // --- FUNGSI FACEBOOK (diperbarui agar memanggil calculateScore) ---
+        // --- FUNGSI FACEBOOK ---
 
         function populateFacebookTable() {
             const tableBody = document.getElementById('facebook-links');
+            tableBody.innerHTML = ''; 
+
             facebookGroups.forEach((url, index) => {
                 const row = tableBody.insertRow();
                 
@@ -379,7 +399,7 @@
                 
                 const cellActions = row.insertCell(1);
 
-                // Tombol Buka Grup (hanya untuk status, tidak menambah score)
+                // Tombol Buka Grup (hanya untuk status)
                 const openedClass = localStorage.getItem(STORAGE_PREFIX + keyOpened) === 'true' ? 'btn-group-opened' : 'btn-group-open';
                 cellActions.innerHTML += `
                     <a href="${url}" target="_blank" class="btn-group ${openedClass}" data-key="${keyOpened}" onclick="markGroupOpened(event)">Buka Grup</a>
@@ -416,34 +436,40 @@
 
             if (link !== null && link.trim() !== "") {
                 const fullKey = STORAGE_PREFIX + keyLink;
+                const isNewLink = localStorage.getItem(fullKey) === null || localStorage.getItem(fullKey) === "";
+
                 localStorage.setItem(fullKey, link);
 
-                // Update tampilan link
                 const displayElement = document.getElementById(`display-${keyLink}`);
                 displayElement.textContent = link;
                 displayElement.href = link;
                 displayElement.classList.remove('empty');
                 
+                if (isNewLink) {
+                    calculateScore(); 
+                }
                 alert("Link berhasil disimpan!");
+
             } else if (link === "") {
-                // Jika input dikosongkan, hapus data
                 const fullKey = STORAGE_PREFIX + keyLink;
+                const wasLinkPresent = localStorage.getItem(fullKey) !== null && localStorage.getItem(fullKey) !== "";
+
                 localStorage.removeItem(fullKey);
 
-                // Update tampilan link
                 const displayElement = document.getElementById(`display-${keyLink}`);
                 displayElement.textContent = 'Belum ada link.';
                 displayElement.removeAttribute('href');
                 displayElement.classList.add('empty');
 
+                if (wasLinkPresent) {
+                    calculateScore(); 
+                }
                 alert("Link berhasil dihapus.");
             }
-            // Panggil fungsi score setiap kali link diubah
-            calculateScore(); 
         }
 
 
-        // --- FUNGSI UMUM (diperbarui agar memanggil calculateScore) ---
+        // --- FUNGSI UMUM ---
         function saveInput(event) {
             const element = event.target;
             const key = element.getAttribute('data-key');
@@ -459,14 +485,12 @@
                 localStorage.setItem(STORAGE_PREFIX + key, value);
             }
 
-            // Panggil fungsi score setiap kali input D-Pack atau TikTok diubah
             if (element.getAttribute('data-score-item') === 'true') {
                 calculateScore(); 
             }
         }
 
         function loadData() {
-            // Muat data untuk semua input yang memiliki data-key
             document.querySelectorAll('[data-key]').forEach(element => {
                 const key = element.getAttribute('data-key');
                 
@@ -481,7 +505,6 @@
                     }
                 }
             });
-            // Hitung score setelah semua data dimuat
             calculateScore();
         }
 
@@ -503,9 +526,9 @@
 
         // --- INISIALISASI ---
         document.addEventListener('DOMContentLoaded', () => {
-            displayCurrentDate(); // Tampilkan tanggal hari ini
-            populateFacebookTable(); // Buat baris tabel Facebook
-            loadData(); // Muat data D-Pack dan TikTok, dan hitung score awal
+            displayCurrentDate(); 
+            populateFacebookTable(); 
+            loadData(); 
 
             // Tambahkan event listener untuk input D-Pack dan TikTok
             document.querySelectorAll('[data-score-item="true"]').forEach(element => {
