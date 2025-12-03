@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monitoring Kinerja Sales Harian</title>
     <style>
-        /* Gaya CSS */
+        /* Gaya CSS (tidak ada perubahan signifikan) */
         body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f9; }
         .container { max-width: 800px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
         h1, h2, h3 { color: #333; text-align: center; }
@@ -20,35 +20,16 @@
         th { background-color: #4CAF50; color: white; }
         tr:nth-child(even) { background-color: #f2f2f2; }
 
-        /* Gaya Tombol Buka Grup */
-        .btn-group {
-            padding: 8px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            color: white;
-            font-weight: bold;
-            transition: background-color 0.3s;
-            text-decoration: none;
-            display: inline-block;
-        }
+        .btn-group { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; color: white; font-weight: bold; transition: background-color 0.3s; text-decoration: none; display: inline-block; }
         .btn-group-open { background-color: #dc3545; } 
         .btn-group-opened { background-color: #007bff; }
+        .btn-group.disabled, .btn-group:disabled { background-color: #6c757d !important; cursor: not-allowed; pointer-events: none; }
         
-        /* Gaya Tombol Non-Aktif (Disabled) */
-        .btn-group.disabled, .btn-group:disabled {
-            background-color: #6c757d !important; /* Abu-abu terang */
-            cursor: not-allowed;
-            pointer-events: none; /* Mencegah klik lebih lanjut */
-        }
-        
-        /* Gaya Tombol Paste Link */
         .btn-paste { padding: 8px 15px; background-color: #ffc107; color: #333; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-left: 10px; }
         .btn-paste:hover { background-color: #e0a800; }
         .posted-link { display: block; margin-top: 5px; font-size: 0.9em; word-break: break-all; color: #0056b3; text-decoration: underline; }
         .posted-link.empty { color: #6c757d; font-style: italic; }
         
-        /* Gaya Toggle Switch */
         .toggle-switch { position: relative; display: inline-block; width: 60px; height: 34px; }
         .toggle-switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
@@ -57,13 +38,13 @@
         input:focus + .slider { box-shadow: 0 0 1px #2196F3; }
         input:checked + .slider:before { transform: translateX(26px); }
 
-        /* Gaya Reset Section */
         .reset-section { margin-top: 30px; padding: 15px; border: 1px solid #dc3545; border-radius: 5px; background-color: #ffe0e3; text-align: center; }
         .reset-section button { padding: 10px 20px; background-color: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
         .reset-section button:hover { background-color: #c82333; }
-        input[type="url"], input[type="text"] { width: 90%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; text-align: left; }
+        /* Gaya input yang diperbarui untuk mencakup nama sales */
+        input[type="url"], input[type="text"] { width: 90%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; text-align: left; margin-bottom: 10px; }
         #tiktok-row td { text-align: left; }
-
+        #sales-input-container { text-align: center; margin-bottom: 20px; }
     </style>
 </head>
 <body>
@@ -73,8 +54,17 @@
         
         <div id="current-date" class="date-display"></div>
         
+        <div id="sales-input-container">
+            <h3>Nama Sales</h3>
+            <input type="text" id="sales-name-input" data-key="sales_name" placeholder="Masukkan Nama Anda">
+        </div>
+        
         <div id="score-display"></div>
-                
+        
+        <p style="text-align: center; font-style: italic; color: #007bff;">
+            Data kinerja akan direset otomatis setiap hari pada jam 01:00 pagi.
+        </p>
+
         <hr>
 
         <h2>✅ Tugas Harian</h2>
@@ -132,6 +122,12 @@
         </table>
 
         <hr>
+        
+        <div style="text-align: center; margin-top: 20px;">
+            <button onclick="sendDataToSheet()" style="padding: 15px 30px; background-color: #007bff; color: white; border: none; border-radius: 8px; font-size: 1.2em; cursor: pointer;">
+                Kirim Laporan ke Google Sheet
+            </button>
+        </div>
 
         <div class="reset-section">
             <h2>⚠️ Reset Semua Data (Hapus Inputan Manual)</h2>
@@ -151,24 +147,26 @@
         const STORAGE_PREFIX = "sales_monitor_";
         const RESET_PASSWORD = "M@diun23";
         const LAST_RESET_KEY = STORAGE_PREFIX + "last_reset_date"; 
+        const SALES_NAME_KEY = STORAGE_PREFIX + "sales_name"; // Key baru
         const RESET_HOUR = 1; 
-        const MIN_GREEN_SCORE = 80;
+        const MIN_GREEN_SCORE = 90;
         
+        // PASTE URL WEB APP APPS SCRIPT ANDA DI SINI
+        const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbwioQzut9D73XX24Xm_mAjeY-cHaKGHHcS4t2EnBcZabCK2vkpKKtvfk58r9_8e7EDDiw/exec'; 
+
         // --- KONFIGURASI SKOR BARU ---
         const SCORE_CONFIG = {
             D_PACK: 2,
             FACEBOOK_TOTAL: 85,
             TIKTOK: 5
         };
-        const MAX_FACEBOOK_ITEMS = facebookGroups.length; // 34
+        const MAX_FACEBOOK_ITEMS = facebookGroups.length; 
         const MAX_D_PACK_ITEMS = 3;
-        const FACEBOOK_SCORE_PER_ITEM = SCORE_CONFIG.FACEBOOK_TOTAL / MAX_FACEBOOK_ITEMS; // 85 / 34 ≈ 2.5
+        const FACEBOOK_SCORE_PER_ITEM = SCORE_CONFIG.FACEBOOK_TOTAL / MAX_FACEBOOK_ITEMS; 
         
-        // Total Maksimal: (3*2) + 85 + 5 = 96
-        const MAX_ACTUAL_SCORE = (MAX_D_PACK_ITEMS * SCORE_CONFIG.D_PACK) + SCORE_CONFIG.FACEBOOK_TOTAL + SCORE_CONFIG.TIKTOK; // 96
+        const MAX_ACTUAL_SCORE = (MAX_D_PACK_ITEMS * SCORE_CONFIG.D_PACK) + SCORE_CONFIG.FACEBOOK_TOTAL + SCORE_CONFIG.TIKTOK; 
         const SCORE_FACTOR = 100 / MAX_ACTUAL_SCORE; 
 
-        // KONSTANTA BARU UNTUK LOGIKA KLIK TOMBOL GRUP
         const MAX_GROUP_CLICKS = 11;
         const GROUP_CLICKS_COUNT_KEY = STORAGE_PREFIX + "group_click_count";
 
@@ -214,30 +212,39 @@
             }
             
             if (shouldReset) {
+                // KIRIM LAPORAN SEBELUM RESET OTOMATIS (jika user lupa)
+                if (confirm("Reset Harian Otomatis akan dijalankan. Apakah Anda ingin mencoba mengirimkan data terakhir Anda ke Google Sheet sebelum data dihapus?")) {
+                    sendDataToSheet(true); 
+                }
                 runReset(true); 
             }
         }
         
-        // --- FUNGSI SCORE (Diperbarui dengan Bobot Baru) ---
+        // --- FUNGSI SCORE ---
 
-        function calculateScore() {
+        function getCalculatedScore() {
             let actualScore = 0;
             let fbLinkCount = 0;
             
-            // 1. Hitung D-Pack dan TikTok 
-            document.querySelectorAll('[data-score-item]').forEach(element => {
+            // D-Pack dan TikTok 
+            const dpackStatuses = {};
+            document.querySelectorAll('[data-score-item]').forEach((element, index) => {
                 const type = element.getAttribute('data-score-item');
                 const key = element.getAttribute('data-key');
                 const storedValue = localStorage.getItem(STORAGE_PREFIX + key);
 
-                if (type === 'dpack' && storedValue === 'true') {
-                    actualScore += SCORE_CONFIG.D_PACK; // 2 Poin
+                if (type === 'dpack') {
+                    const isChecked = storedValue === 'true';
+                    dpackStatuses[key] = isChecked;
+                    if (isChecked) {
+                        actualScore += SCORE_CONFIG.D_PACK;
+                    }
                 } else if (type === 'tiktok' && storedValue && storedValue.trim() !== "") {
-                    actualScore += SCORE_CONFIG.TIKTOK; // 5 Poin
+                    actualScore += SCORE_CONFIG.TIKTOK;
                 }
             });
 
-            // 2. Hitung Grup Facebook Link
+            // Grup Facebook Link
             facebookGroups.forEach((url, index) => {
                 const keyLink = `fb-link-${index}`;
                 const storedLink = localStorage.getItem(STORAGE_PREFIX + keyLink);
@@ -246,14 +253,20 @@
                 }
             });
             
-            // Tambahkan skor Facebook total (85 Poin dibagi rata)
             actualScore += fbLinkCount * FACEBOOK_SCORE_PER_ITEM; 
             
-            // Konversi score aktual ke skala 100
             let displayedScore = Math.round(actualScore * SCORE_FACTOR);
             if (displayedScore > 100) displayedScore = 100; 
 
-            updateScoreDisplay(displayedScore);
+            return {
+                displayedScore: displayedScore,
+                dpackStatuses: dpackStatuses
+            };
+        }
+
+        function calculateScore() {
+            const result = getCalculatedScore();
+            updateScoreDisplay(result.displayedScore);
         }
 
         function updateScoreDisplay(score) {
@@ -268,7 +281,63 @@
             }
         }
 
-        // --- FUNGSI FACEBOOK (Ditambahkan Logika Tombol) ---
+        // --- FUNGSI KIRIM DATA KE SHEET BARU ---
+
+        async function sendDataToSheet(isAuto = false) {
+            if (GOOGLE_SHEET_URL === 'PASTE_URL_APPS_SCRIPT_ANDA_DI_SINI') {
+                alert("❌ ERROR: Harap ganti 'PASTE_URL_APPS_SCRIPT_ANDA_DI_SINI' dengan Web app URL Apps Script Anda terlebih dahulu!");
+                return;
+            }
+
+            const salesName = localStorage.getItem(SALES_NAME_KEY) || document.getElementById('sales-name-input').value;
+            const scoreResult = getCalculatedScore();
+            const tiktokLink = localStorage.getItem(STORAGE_PREFIX + 'tiktok-link') || '';
+
+            if (!salesName || salesName.trim() === "") {
+                alert("❌ Gagal Kirim: Harap masukkan Nama Sales terlebih dahulu.");
+                return;
+            }
+
+            const payload = {
+                salesName: salesName,
+                totalScore: scoreResult.displayedScore,
+                dpack1: scoreResult.dpackStatuses['dpack-1'],
+                dpack2: scoreResult.dpackStatuses['dpack-2'],
+                dpack3: scoreResult.dpackStatuses['dpack-3'],
+                tiktokLink: tiktokLink,
+                // Kita tidak mengirim 34 link FB individu untuk mempermudah Apps Script
+            };
+
+            const button = document.querySelector('button[onclick="sendDataToSheet()"]');
+            const originalButtonText = button.textContent;
+            button.textContent = 'Mengirim...';
+            button.disabled = true;
+
+            try {
+                const response = await fetch(GOOGLE_SHEET_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // Penting untuk Apps Script doPost saat Who has access = Anyone
+                    cache: 'no-cache',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                // Karena menggunakan 'no-cors', responsnya mungkin tidak bisa dibaca (opaque), 
+                // jadi kita asumsikan sukses jika fetch berhasil tanpa error jaringan.
+                alert(`✅ Laporan sukses dikirim ke Google Sheet!\nScore: ${payload.totalScore} / 100\nNama: ${payload.salesName}`);
+
+            } catch (error) {
+                alert(`❌ Gagal Kirim Laporan. Terjadi error jaringan atau Apps Script belum di-deploy dengan benar.\nDetail Error: ${error.message}`);
+                console.error('Error sending data:', error);
+            } finally {
+                button.textContent = originalButtonText;
+                button.disabled = false;
+            }
+        }
+
+        // --- FUNGSI FACEBOOK ---
 
         function checkGroupClickStatus() {
             const count = parseInt(localStorage.getItem(GROUP_CLICKS_COUNT_KEY) || '0', 10);
@@ -292,14 +361,11 @@
                 
                 const cellActions = row.insertCell(1);
                 
-                // Cek apakah tombol sudah diklik sebelumnya
                 const isOpened = localStorage.getItem(STORAGE_PREFIX + keyOpened) === 'true';
                 const openedClass = isOpened ? 'btn-group-opened' : 'btn-group-open';
                 
-                // Tambahkan kelas disabled jika limit sudah tercapai
                 const disabledClass = isLimitReached ? 'disabled' : '';
 
-                // Tombol Buka Grup (Non-aktif jika limit 11 sudah tercapai)
                 cellActions.innerHTML += `
                     <a href="${url}" target="_blank" class="btn-group ${openedClass} ${disabledClass}" 
                        data-key="${keyOpened}" 
@@ -309,7 +375,6 @@
                     </a>
                 `;
 
-                // Tombol Paste Link Postingan
                 cellActions.innerHTML += `<button class="btn-paste" onclick="pasteLinkPrompt('${keyLink}')">Paste Link</button>`;
                 
                 const storedLink = localStorage.getItem(STORAGE_PREFIX + keyLink);
@@ -323,23 +388,18 @@
             const button = event.currentTarget;
             const key = button.getAttribute('data-key');
             
-            // Cek apakah tombol sudah diklik atau sudah disabled
             if (button.classList.contains('btn-group-opened') || button.classList.contains('disabled')) {
-                return; // Abaikan klik
+                return; 
             }
 
-            // Tambahkan hitungan klik jika ini adalah klik pertama untuk tombol ini
             const currentCount = parseInt(localStorage.getItem(GROUP_CLICKS_COUNT_KEY) || '0', 10);
             localStorage.setItem(GROUP_CLICKS_COUNT_KEY, currentCount + 1);
 
-            // Ubah tampilan tombol menjadi biru
             button.classList.remove('btn-group-open');
             button.classList.add('btn-group-opened');
             localStorage.setItem(STORAGE_PREFIX + key, 'true');
 
-            // Cek status setelah klik
             if (currentCount + 1 >= MAX_GROUP_CLICKS) {
-                // Nonaktifkan semua tombol Buka Grup
                 alert(`Selamat, Anda telah membuka ${MAX_GROUP_CLICKS} grup! Semua tombol "Buka Grup" telah dinonaktifkan.`);
                 disableAllGroupButtons();
             }
@@ -359,7 +419,6 @@
             if (link !== null && link.trim() !== "") {
                 const fullKey = STORAGE_PREFIX + keyLink;
                 const isNewLink = localStorage.getItem(fullKey) === null || localStorage.getItem(fullKey) === "";
-
                 localStorage.setItem(fullKey, link);
 
                 const displayElement = document.getElementById(`display-${keyLink}`);
@@ -373,7 +432,6 @@
             } else if (link === "") {
                 const fullKey = STORAGE_PREFIX + keyLink;
                 const wasLinkPresent = localStorage.getItem(fullKey) !== null && localStorage.getItem(fullKey) !== "";
-
                 localStorage.removeItem(fullKey);
 
                 const displayElement = document.getElementById(`display-${keyLink}`);
@@ -387,16 +445,15 @@
         }
 
 
-        // --- FUNGSI RESET DATA (Diperbarui untuk Reset Klik Grup) ---
+        // --- FUNGSI RESET DATA ---
         
         function runReset(isAuto) {
             Object.keys(localStorage).forEach(key => {
-                if (key.startsWith(STORAGE_PREFIX) && key !== LAST_RESET_KEY) {
+                if (key.startsWith(STORAGE_PREFIX) && key !== LAST_RESET_KEY && key !== SALES_NAME_KEY) { // JANGAN HAPUS NAMA SALES
                     localStorage.removeItem(key);
                 }
             });
             
-            // Reset hitungan klik grup saat reset
             localStorage.removeItem(GROUP_CLICKS_COUNT_KEY);
 
             localStorage.setItem(LAST_RESET_KEY, new Date().toISOString());
@@ -404,7 +461,7 @@
             location.reload(); 
             
             if (isAuto) {
-                alert("✅ Reset Harian Otomatis berhasil dijalankan! Data kinerja hari sebelumnya sudah dihapus.");
+                // Notifikasi alert sudah ada di checkAutoReset
             } else {
                 alert("✅ Reset Manual berhasil dijalankan!");
             }
@@ -413,7 +470,11 @@
         function resetDataManual() {
             const password = prompt("Masukkan password untuk mereset semua data:");
             if (password === RESET_PASSWORD) {
-                runReset(false); 
+                if (confirm("ANDA YAKIN INGIN MERESET? Pastikan Anda sudah mengirim laporan ke Google Sheet!")) {
+                    // Coba kirim laporan manual sekali sebelum reset
+                    sendDataToSheet();
+                    runReset(false); 
+                }
             } else if (password !== null) {
                 alert("❌ Password salah. Data tidak direset.");
             }
@@ -433,7 +494,7 @@
             if (key) {
                 localStorage.setItem(STORAGE_PREFIX + key, value);
             }
-            if (element.getAttribute('data-score-item')) {
+            if (element.getAttribute('data-score-item') || key === 'sales_name') {
                 calculateScore(); 
             }
         }
@@ -441,14 +502,12 @@
         function loadData() {
             document.querySelectorAll('[data-key]').forEach(element => {
                 const key = element.getAttribute('data-key');
-                if (key.startsWith('dpack') || key.startsWith('tiktok')) {
-                    const storedValue = localStorage.getItem(STORAGE_PREFIX + key);
-                    if (storedValue !== null) {
-                        if (element.type === 'checkbox') {
-                            element.checked = storedValue === 'true';
-                        } else {
-                            element.value = storedValue;
-                        }
+                const storedValue = localStorage.getItem(STORAGE_PREFIX + key);
+                if (storedValue !== null) {
+                    if (element.type === 'checkbox') {
+                        element.checked = storedValue === 'true';
+                    } else {
+                        element.value = storedValue;
                     }
                 }
             });
@@ -463,8 +522,8 @@
             populateFacebookTable(); 
             loadData(); 
 
-            // Tambahkan event listener untuk input D-Pack dan TikTok
-            document.querySelectorAll('[data-score-item]').forEach(element => {
+            // Tambahkan event listener untuk semua input yang memiliki data-key
+            document.querySelectorAll('[data-key]').forEach(element => {
                 element.addEventListener('change', saveInput);
                 element.addEventListener('input', saveInput); 
             });
