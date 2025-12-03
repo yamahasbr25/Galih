@@ -19,7 +19,7 @@
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-        h1, h2 {
+        h1, h2, h3 {
             color: #333;
             text-align: center;
         }
@@ -31,7 +31,7 @@
         th, td {
             border: 1px solid #ddd;
             padding: 12px;
-            text-align: left;
+            text-align: center; /* Tombol dan Link di tengah */
         }
         th {
             background-color: #4CAF50;
@@ -40,32 +40,58 @@
         tr:nth-child(even) {
             background-color: #f2f2f2;
         }
-        .reset-section {
-            margin-top: 30px;
-            padding: 15px;
-            border: 1px solid #dc3545;
+
+        /* Gaya Tombol Buka Grup */
+        .btn-group {
+            padding: 8px 15px;
+            border: none;
             border-radius: 5px;
-            background-color: #ffe0e3;
-            text-align: center;
-        }
-        .reset-section button {
-            padding: 10px 20px;
-            background-color: #dc3545;
+            cursor: pointer;
             color: white;
+            font-weight: bold;
+            transition: background-color 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        /* Status BELUM DIBUKA (Merah) */
+        .btn-group-open { 
+            background-color: #dc3545; /* Merah */
+        }
+        /* Status SUDAH DIBUKA (Biru) */
+        .btn-group-opened {
+            background-color: #007bff; /* Biru */
+        }
+
+        /* Gaya Tombol Paste Link */
+        .btn-paste {
+            padding: 8px 15px;
+            background-color: #ffc107; /* Kuning */
+            color: #333;
             border: none;
             border-radius: 5px;
             cursor: pointer;
             font-weight: bold;
+            margin-left: 10px;
         }
-        .reset-section button:hover {
-            background-color: #c82333;
+        .btn-paste:hover {
+            background-color: #e0a800;
         }
-        input[type="url"], input[type="text"] {
-            width: 90%;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+
+        /* Gaya Tampilan Link Hasil Postingan */
+        .posted-link {
+            display: block;
+            margin-top: 5px;
+            font-size: 0.9em;
+            word-break: break-all;
+            color: #0056b3;
+            text-decoration: underline;
         }
+        .posted-link.empty {
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        /* Gaya Toggle Switch (D-Pack) */
         .toggle-switch {
             position: relative;
             display: inline-block;
@@ -108,6 +134,40 @@
         input:checked + .slider:before {
             transform: translateX(26px);
         }
+
+        /* Gaya Reset Section */
+        .reset-section {
+            margin-top: 30px;
+            padding: 15px;
+            border: 1px solid #dc3545;
+            border-radius: 5px;
+            background-color: #ffe0e3;
+            text-align: center;
+        }
+        .reset-section button {
+            padding: 10px 20px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .reset-section button:hover {
+            background-color: #c82333;
+        }
+
+        /* Gaya Input TikTok */
+        input[type="url"], input[type="text"] {
+            width: 90%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            text-align: left;
+        }
+        #tiktok-row td {
+            text-align: left;
+        }
     </style>
 </head>
 <body>
@@ -149,7 +209,7 @@
             <thead>
                 <tr>
                     <th>Grup Facebook</th>
-                    <th>Link Postingan Anda</th>
+                    <th>Aksi & Hasil Postingan</th>
                 </tr>
             </thead>
             <tbody id="facebook-links">
@@ -165,7 +225,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr>
+                <tr id="tiktok-row">
                     <td>TikTok</td>
                     <td><input type="url" data-key="tiktok-link" placeholder="Masukkan link TikTok di sini"></td>
                 </tr>
@@ -199,26 +259,95 @@
             "https://www.facebook.com/groups/2560913867495115"
         ];
 
-        const STORAGE_PREFIX = "sales_monitor_"; // Prefix untuk kunci localStorage
-        const RESET_PASSWORD = "M@diun23"; // Password Reset
+        const STORAGE_PREFIX = "sales_monitor_";
+        const RESET_PASSWORD = "M@diun23"; 
 
         // 1. Fungsi untuk mengisi tabel Facebook secara dinamis
         function populateFacebookTable() {
             const tableBody = document.getElementById('facebook-links');
             facebookGroups.forEach((url, index) => {
                 const row = tableBody.insertRow();
+                
+                // Kunci penyimpanan untuk status dibuka dan link postingan
+                const keyOpened = `fb-opened-${index}`;
+                const keyLink = `fb-link-${index}`;
+                
                 // Sel untuk URL Grup
                 const cellGroup = row.insertCell(0);
-                cellGroup.innerHTML = `<a href="${url}" target="_blank">${url}</a>`;
+                // Menampilkan ID Grup (bagian terakhir URL)
+                const groupName = url.split('/').filter(p => p).pop(); 
+                cellGroup.textContent = groupName.replace('buy_sell_discussion', 'Diskusi Jual-Beli'); 
                 
-                // Sel untuk Input Link Postingan
-                const cellInput = row.insertCell(1);
-                const inputKey = `fb-link-${index}`;
-                cellInput.innerHTML = `<input type="url" data-key="${inputKey}" placeholder="Masukkan link postingan di sini">`;
+                // Sel untuk Tombol Aksi dan Hasil
+                const cellActions = row.insertCell(1);
+
+                // Tombol Buka Grup
+                const openedClass = localStorage.getItem(STORAGE_PREFIX + keyOpened) === 'true' ? 'btn-group-opened' : 'btn-group-open';
+                cellActions.innerHTML += `
+                    <a href="${url}" target="_blank" class="btn-group ${openedClass}" data-key="${keyOpened}" onclick="markGroupOpened(event)">Buka Grup</a>
+                `;
+
+                // Tombol Paste Link Postingan
+                cellActions.innerHTML += `
+                    <button class="btn-paste" onclick="pasteLinkPrompt('${keyLink}')">Paste Link</button>
+                `;
+
+                // Tempat Hasil Postingan
+                const storedLink = localStorage.getItem(STORAGE_PREFIX + keyLink);
+                const displayLink = storedLink ? storedLink : 'Belum ada link.';
+                const linkClass = storedLink ? '' : 'empty';
+                cellActions.innerHTML += `
+                    <a href="${storedLink}" target="_blank" class="posted-link ${linkClass}" id="display-${keyLink}">${displayLink}</a>
+                `;
             });
         }
+        
+        // 2. Fungsi untuk menandai grup sudah dibuka (perubahan warna)
+        function markGroupOpened(event) {
+            const button = event.currentTarget;
+            const key = button.getAttribute('data-key');
+            
+            // Perbarui kelas tombol (Merah -> Biru)
+            button.classList.remove('btn-group-open');
+            button.classList.add('btn-group-opened');
 
-        // 2. Fungsi untuk menyimpan data ke localStorage
+            // Simpan status ke localStorage
+            localStorage.setItem(STORAGE_PREFIX + key, 'true');
+        }
+
+        // 3. Fungsi untuk meminta dan menyimpan link postingan
+        function pasteLinkPrompt(keyLink) {
+            const currentLink = localStorage.getItem(STORAGE_PREFIX + keyLink) || '';
+            const link = prompt("Masukkan link postingan Anda:", currentLink);
+
+            if (link !== null && link.trim() !== "") {
+                const fullKey = STORAGE_PREFIX + keyLink;
+                localStorage.setItem(fullKey, link);
+
+                // Update tampilan link
+                const displayElement = document.getElementById(`display-${keyLink}`);
+                displayElement.textContent = link;
+                displayElement.href = link;
+                displayElement.classList.remove('empty');
+                
+                alert("Link berhasil disimpan!");
+            } else if (link === "") {
+                // Jika input dikosongkan, hapus data
+                const fullKey = STORAGE_PREFIX + keyLink;
+                localStorage.removeItem(fullKey);
+
+                // Update tampilan link
+                const displayElement = document.getElementById(`display-${keyLink}`);
+                displayElement.textContent = 'Belum ada link.';
+                displayElement.removeAttribute('href');
+                displayElement.classList.add('empty');
+
+                alert("Link berhasil dihapus.");
+            }
+        }
+
+
+        // 4. Fungsi untuk menyimpan data input (hanya untuk D-Pack dan TikTok)
         function saveInput(event) {
             const element = event.target;
             const key = element.getAttribute('data-key');
@@ -235,26 +364,26 @@
             }
         }
 
-        // 3. Fungsi untuk memuat data dari localStorage
-        function loadData() {
-            // Muat data untuk semua input dan checkbox
-            document.querySelectorAll('[data-key]').forEach(element => {
+        // 5. Fungsi untuk memuat data (hanya untuk D-Pack dan TikTok)
+        function loadNonFbData() {
+            document.querySelectorAll('input[data-key]').forEach(element => {
                 const key = element.getAttribute('data-key');
-                const storedValue = localStorage.getItem(STORAGE_PREFIX + key);
+                if (key.startsWith('dpack') || key.startsWith('tiktok')) {
+                    const storedValue = localStorage.getItem(STORAGE_PREFIX + key);
 
-                if (storedValue !== null) {
-                    if (element.type === 'checkbox') {
-                        // Untuk checkbox, nilainya adalah boolean
-                        element.checked = storedValue === 'true';
-                    } else {
-                        // Untuk input teks/url
-                        element.value = storedValue;
+                    if (storedValue !== null) {
+                        if (element.type === 'checkbox') {
+                            element.checked = storedValue === 'true';
+                        } else {
+                            element.value = storedValue;
+                        }
                     }
                 }
             });
         }
 
-        // 4. Fungsi untuk menangani reset data
+
+        // 6. Fungsi untuk menangani reset data
         function resetData() {
             const password = prompt("Masukkan password untuk mereset semua data:");
             if (password === RESET_PASSWORD) {
@@ -270,18 +399,20 @@
             } else if (password !== null) {
                 alert("❌ Password salah. Data tidak direset.");
             }
-            // Jika pengguna menekan 'Cancel', tidak terjadi apa-apa
         }
 
-        // 5. Inisialisasi saat dokumen dimuat
+        // 7. Inisialisasi saat dokumen dimuat
         document.addEventListener('DOMContentLoaded', () => {
-            populateFacebookTable(); // Buat baris tabel Facebook
-            loadData(); // Muat data yang tersimpan
+            populateFacebookTable(); // Buat baris tabel Facebook dan muat statusnya
+            loadNonFbData(); // Muat data D-Pack dan TikTok
 
-            // Tambahkan event listener untuk semua input yang memiliki data-key
+            // Tambahkan event listener untuk input D-Pack dan TikTok
             document.querySelectorAll('[data-key]').forEach(element => {
-                element.addEventListener('change', saveInput);
-                element.addEventListener('input', saveInput); // Untuk input teks/url saat mengetik
+                const key = element.getAttribute('data-key');
+                if (key.startsWith('dpack') || key.startsWith('tiktok')) {
+                    element.addEventListener('change', saveInput);
+                    element.addEventListener('input', saveInput); 
+                }
             });
         });
     </script>
