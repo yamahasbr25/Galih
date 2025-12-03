@@ -23,6 +23,34 @@
             color: #333;
             text-align: center;
         }
+        /* Style untuk menampilkan Tanggal */
+        .date-display {
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #555;
+        }
+        /* Style untuk Total Score */
+        #score-display {
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin: 15px auto;
+            width: 70%;
+            text-align: center;
+            color: white;
+            transition: background-color 0.5s;
+        }
+        /* Warna Score */
+        .score-red {
+            background-color: #dc3545; /* Merah */
+        }
+        .score-green {
+            background-color: #28a745; /* Hijau */
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
@@ -31,7 +59,7 @@
         th, td {
             border: 1px solid #ddd;
             padding: 12px;
-            text-align: center; /* Tombol dan Link di tengah */
+            text-align: center; 
         }
         th {
             background-color: #4CAF50;
@@ -55,17 +83,17 @@
         }
         /* Status BELUM DIBUKA (Merah) */
         .btn-group-open { 
-            background-color: #dc3545; /* Merah */
+            background-color: #dc3545; 
         }
         /* Status SUDAH DIBUKA (Biru) */
         .btn-group-opened {
-            background-color: #007bff; /* Biru */
+            background-color: #007bff; 
         }
 
         /* Gaya Tombol Paste Link */
         .btn-paste {
             padding: 8px 15px;
-            background-color: #ffc107; /* Kuning */
+            background-color: #ffc107; 
             color: #333;
             border: none;
             border-radius: 5px;
@@ -93,6 +121,7 @@
 
         /* Gaya Toggle Switch (D-Pack) */
         .toggle-switch {
+            /* ... (gaya toggle switch tidak berubah) ... */
             position: relative;
             display: inline-block;
             width: 60px;
@@ -174,8 +203,11 @@
 
     <div class="container">
         <h1>🗓️ Monitoring Kinerja Sales Harian</h1>
-        <p style="text-align: center;">Data akan tersimpan otomatis di browser Anda.</p>
         
+        <div id="current-date" class="date-display"></div>
+        
+        <div id="score-display"></div>
+
         <hr>
 
         <h2>✅ Tugas Harian</h2>
@@ -191,15 +223,15 @@
             <tbody>
                 <tr>
                     <td>Prospect Konsumen 1</td>
-                    <td><label class="toggle-switch"><input type="checkbox" data-key="dpack-1"><span class="slider"></span></label></td>
+                    <td><label class="toggle-switch"><input type="checkbox" data-key="dpack-1" data-score-item="true"><span class="slider"></span></label></td>
                 </tr>
                 <tr>
                     <td>Prospect Konsumen 2</td>
-                    <td><label class="toggle-switch"><input type="checkbox" data-key="dpack-2"><span class="slider"></span></label></td>
+                    <td><label class="toggle-switch"><input type="checkbox" data-key="dpack-2" data-score-item="true"><span class="slider"></span></label></td>
                 </tr>
                 <tr>
                     <td>Prospect Konsumen 3</td>
-                    <td><label class="toggle-switch"><input type="checkbox" data-key="dpack-3"><span class="slider"></span></label></td>
+                    <td><label class="toggle-switch"><input type="checkbox" data-key="dpack-3" data-score-item="true"><span class="slider"></span></label></td>
                 </tr>
             </tbody>
         </table>
@@ -227,7 +259,7 @@
             <tbody>
                 <tr id="tiktok-row">
                     <td>TikTok</td>
-                    <td><input type="url" data-key="tiktok-link" placeholder="Masukkan link TikTok di sini"></td>
+                    <td><input type="url" data-key="tiktok-link" data-score-item="true" placeholder="Masukkan link TikTok di sini"></td>
                 </tr>
             </tbody>
         </table>
@@ -243,7 +275,7 @@
     </div>
 
     <script>
-        // Data Grup Facebook
+        // --- KONSTANTA & KONFIGURASI ---
         const facebookGroups = [
             "https://www.facebook.com/groups/527574474067445",
             "https://www.facebook.com/groups/1515571062072333/buy_sell_discussion",
@@ -260,28 +292,94 @@
         ];
 
         const STORAGE_PREFIX = "sales_monitor_";
-        const RESET_PASSWORD = "M@diun23"; 
+        const RESET_PASSWORD = "M@diun23";
+        const SCORE_PER_ITEM = 3; 
+        const MIN_GREEN_SCORE = 90;
 
-        // 1. Fungsi untuk mengisi tabel Facebook secara dinamis
+        // Total item yang bernilai score:
+        // 3 D-Pack + 12 Grup FB + 1 TikTok = 16 item
+        const MAX_SCORE = 16 * SCORE_PER_ITEM; // MAX_SCORE = 48
+        
+        // Catatan: Karena total item adalah 16, total score maksimal adalah 48.
+        // Asumsi, tujuan 100 adalah target motivasi, tapi perhitungan akan berdasarkan 48.
+        // Untuk mencapai target visual 100, kita akan mengali score aktual dengan 100/48 (faktor pembesar).
+        const SCORE_FACTOR = 100 / 48;
+
+
+        // --- FUNGSI TANGGAL ---
+        function displayCurrentDate() {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const today = new Date().toLocaleDateString('id-ID', options);
+            document.getElementById('current-date').textContent = `Hari Ini: ${today}`;
+        }
+
+
+        // --- FUNGSI SCORE ---
+
+        function calculateScore() {
+            let completedItems = 0;
+
+            // 1. Hitung D-Pack dan TikTok (item dengan data-score-item="true")
+            document.querySelectorAll('[data-score-item="true"]').forEach(element => {
+                const key = element.getAttribute('data-key');
+                const storedValue = localStorage.getItem(STORAGE_PREFIX + key);
+
+                if (element.type === 'checkbox' && storedValue === 'true') {
+                    completedItems++;
+                } else if (element.type === 'url' && storedValue && storedValue.trim() !== "") {
+                    completedItems++;
+                }
+            });
+
+            // 2. Hitung Grup Facebook (link postingan)
+            facebookGroups.forEach((url, index) => {
+                const keyLink = `fb-link-${index}`;
+                const storedLink = localStorage.getItem(STORAGE_PREFIX + keyLink);
+                if (storedLink && storedLink.trim() !== "") {
+                    completedItems++;
+                }
+            });
+
+            const actualScore = completedItems * SCORE_PER_ITEM;
+            // Konversi score aktual ke skala 100 untuk display
+            let displayedScore = Math.round(actualScore * SCORE_FACTOR);
+            
+            // Pastikan tidak melebihi 100
+            if (displayedScore > 100) displayedScore = 100; 
+
+            updateScoreDisplay(displayedScore);
+        }
+
+        function updateScoreDisplay(score) {
+            const scoreElement = document.getElementById('score-display');
+            scoreElement.textContent = `TOTAL SCORE: ${score} / 100`;
+
+            // Terapkan pewarnaan
+            scoreElement.classList.remove('score-red', 'score-green');
+            if (score < MIN_GREEN_SCORE) {
+                scoreElement.classList.add('score-red');
+            } else {
+                scoreElement.classList.add('score-green');
+            }
+        }
+
+        // --- FUNGSI FACEBOOK (diperbarui agar memanggil calculateScore) ---
+
         function populateFacebookTable() {
             const tableBody = document.getElementById('facebook-links');
             facebookGroups.forEach((url, index) => {
                 const row = tableBody.insertRow();
                 
-                // Kunci penyimpanan untuk status dibuka dan link postingan
                 const keyOpened = `fb-opened-${index}`;
                 const keyLink = `fb-link-${index}`;
                 
-                // Sel untuk URL Grup
                 const cellGroup = row.insertCell(0);
-                // Menampilkan ID Grup (bagian terakhir URL)
                 const groupName = url.split('/').filter(p => p).pop(); 
                 cellGroup.textContent = groupName.replace('buy_sell_discussion', 'Diskusi Jual-Beli'); 
                 
-                // Sel untuk Tombol Aksi dan Hasil
                 const cellActions = row.insertCell(1);
 
-                // Tombol Buka Grup
+                // Tombol Buka Grup (hanya untuk status, tidak menambah score)
                 const openedClass = localStorage.getItem(STORAGE_PREFIX + keyOpened) === 'true' ? 'btn-group-opened' : 'btn-group-open';
                 cellActions.innerHTML += `
                     <a href="${url}" target="_blank" class="btn-group ${openedClass}" data-key="${keyOpened}" onclick="markGroupOpened(event)">Buka Grup</a>
@@ -302,20 +400,16 @@
             });
         }
         
-        // 2. Fungsi untuk menandai grup sudah dibuka (perubahan warna)
         function markGroupOpened(event) {
             const button = event.currentTarget;
             const key = button.getAttribute('data-key');
             
-            // Perbarui kelas tombol (Merah -> Biru)
             button.classList.remove('btn-group-open');
             button.classList.add('btn-group-opened');
 
-            // Simpan status ke localStorage
             localStorage.setItem(STORAGE_PREFIX + key, 'true');
         }
 
-        // 3. Fungsi untuk meminta dan menyimpan link postingan
         function pasteLinkPrompt(keyLink) {
             const currentLink = localStorage.getItem(STORAGE_PREFIX + keyLink) || '';
             const link = prompt("Masukkan link postingan Anda:", currentLink);
@@ -344,10 +438,12 @@
 
                 alert("Link berhasil dihapus.");
             }
+            // Panggil fungsi score setiap kali link diubah
+            calculateScore(); 
         }
 
 
-        // 4. Fungsi untuk menyimpan data input (hanya untuk D-Pack dan TikTok)
+        // --- FUNGSI UMUM (diperbarui agar memanggil calculateScore) ---
         function saveInput(event) {
             const element = event.target;
             const key = element.getAttribute('data-key');
@@ -362,15 +458,20 @@
             if (key) {
                 localStorage.setItem(STORAGE_PREFIX + key, value);
             }
+
+            // Panggil fungsi score setiap kali input D-Pack atau TikTok diubah
+            if (element.getAttribute('data-score-item') === 'true') {
+                calculateScore(); 
+            }
         }
 
-        // 5. Fungsi untuk memuat data (hanya untuk D-Pack dan TikTok)
-        function loadNonFbData() {
-            document.querySelectorAll('input[data-key]').forEach(element => {
+        function loadData() {
+            // Muat data untuk semua input yang memiliki data-key
+            document.querySelectorAll('[data-key]').forEach(element => {
                 const key = element.getAttribute('data-key');
+                
                 if (key.startsWith('dpack') || key.startsWith('tiktok')) {
                     const storedValue = localStorage.getItem(STORAGE_PREFIX + key);
-
                     if (storedValue !== null) {
                         if (element.type === 'checkbox') {
                             element.checked = storedValue === 'true';
@@ -380,20 +481,19 @@
                     }
                 }
             });
+            // Hitung score setelah semua data dimuat
+            calculateScore();
         }
 
 
-        // 6. Fungsi untuk menangani reset data
         function resetData() {
             const password = prompt("Masukkan password untuk mereset semua data:");
             if (password === RESET_PASSWORD) {
-                // Hapus semua item yang diawali dengan prefix kita
                 Object.keys(localStorage).forEach(key => {
                     if (key.startsWith(STORAGE_PREFIX)) {
                         localStorage.removeItem(key);
                     }
                 });
-                // Muat ulang data (untuk mengosongkan formulir)
                 location.reload(); 
                 alert("✅ Semua data monitoring telah berhasil direset!");
             } else if (password !== null) {
@@ -401,18 +501,16 @@
             }
         }
 
-        // 7. Inisialisasi saat dokumen dimuat
+        // --- INISIALISASI ---
         document.addEventListener('DOMContentLoaded', () => {
-            populateFacebookTable(); // Buat baris tabel Facebook dan muat statusnya
-            loadNonFbData(); // Muat data D-Pack dan TikTok
+            displayCurrentDate(); // Tampilkan tanggal hari ini
+            populateFacebookTable(); // Buat baris tabel Facebook
+            loadData(); // Muat data D-Pack dan TikTok, dan hitung score awal
 
             // Tambahkan event listener untuk input D-Pack dan TikTok
-            document.querySelectorAll('[data-key]').forEach(element => {
-                const key = element.getAttribute('data-key');
-                if (key.startsWith('dpack') || key.startsWith('tiktok')) {
-                    element.addEventListener('change', saveInput);
-                    element.addEventListener('input', saveInput); 
-                }
+            document.querySelectorAll('[data-score-item="true"]').forEach(element => {
+                element.addEventListener('change', saveInput);
+                element.addEventListener('input', saveInput); 
             });
         });
     </script>
