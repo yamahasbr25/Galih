@@ -38,7 +38,6 @@
         input:focus + .slider { box-shadow: 0 0 1px #2196F3; }
         input:checked + .slider:before { transform: translateX(26px); }
 
-        /* Reset Section dihapus */
         input[type="url"] { width: 90%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; text-align: left; margin-bottom: 10px; }
         #tiktok-row td { text-align: left; }
     </style>
@@ -124,7 +123,7 @@
             </button>
         </div>
 
-        </div>
+    </div>
 
     <script>
         // --- KONSTANTA & KONFIGURASI ---
@@ -205,17 +204,19 @@
                 if (confirm(`Reset Harian Otomatis akan dijalankan (01:00). Apakah Anda ingin mencoba mengirimkan data terakhir (${SALES_NAME}) ke Google Sheet sebelum data dihapus?`)) {
                     sendDataToSheet(true); 
                 }
-                runReset(); // Panggil runReset tanpa argumen karena manual sudah dihapus
+                runReset(); 
             }
         }
         
-        // --- FUNGSI SCORE ---
+        // --- FUNGSI SCORE (Diperbarui untuk mengumpulkan Link FB) ---
 
         function getCalculatedScore() {
             let actualScore = 0;
             let fbLinkCount = 0;
-            
             const dpackStatuses = {};
+            const allFbLinks = []; // Array untuk menampung semua link FB yang terisi
+            
+            // 1. D-Pack dan TikTok 
             document.querySelectorAll('[data-score-item]').forEach((element) => {
                 const type = element.getAttribute('data-score-item');
                 const key = element.getAttribute('data-key');
@@ -232,12 +233,15 @@
                 }
             });
 
-            // Grup Facebook Link
+            // 2. Grup Facebook Link & Pengumpulan Link
             facebookGroups.forEach((url, index) => {
                 const keyLink = `fb-link-${index}`;
                 const storedLink = localStorage.getItem(STORAGE_PREFIX + keyLink);
+                
                 if (storedLink && storedLink.trim() !== "") {
                     fbLinkCount++;
+                    // Simpan link postingan yang sudah terisi
+                    allFbLinks.push(`[${index + 1}] ${storedLink}`); 
                 }
             });
             
@@ -248,7 +252,8 @@
 
             return {
                 displayedScore: displayedScore,
-                dpackStatuses: dpackStatuses
+                dpackStatuses: dpackStatuses,
+                allFbLinks: allFbLinks.join(' ||| ') // Gabungkan semua link dengan pemisah
             };
         }
 
@@ -269,7 +274,7 @@
             }
         }
 
-        // --- FUNGSI KIRIM DATA KE SHEET ---
+        // --- FUNGSI KIRIM DATA KE SHEET (Diperbarui) ---
 
         async function sendDataToSheet(isAuto = false) {
             if (GOOGLE_SHEET_URL === 'PASTE_URL_APPS_SCRIPT_ANDA_DI_SINI') {
@@ -288,6 +293,7 @@
                 dpack2: scoreResult.dpackStatuses['dpack-2'],
                 dpack3: scoreResult.dpackStatuses['dpack-3'],
                 tiktokLink: tiktokLink,
+                allFbLinks: scoreResult.allFbLinks, // FIELD BARU
             };
 
             const button = document.querySelector('button[onclick="sendDataToSheet()"]');
@@ -317,7 +323,7 @@
             }
         }
 
-        // --- FUNGSI FACEBOOK ---
+        // --- FUNGSI FACEBOOK (Tidak Ada Perubahan) ---
 
         function checkGroupClickStatus() {
             const count = parseInt(localStorage.getItem(GROUP_CLICKS_COUNT_KEY) || '0', 10);
@@ -425,11 +431,10 @@
         }
 
 
-        // --- FUNGSI RESET DATA (Hanya Otomatis) ---
+        // --- FUNGSI RESET DATA ---
         
         function runReset() {
             Object.keys(localStorage).forEach(key => {
-                // Hapus semua data kecuali LAST_RESET_KEY
                 if (key.startsWith(STORAGE_PREFIX) && key !== LAST_RESET_KEY) { 
                     localStorage.removeItem(key);
                 }
@@ -441,8 +446,6 @@
 
             location.reload(); 
         }
-
-        // FUNGSI RESET MANUAL DIHAPUS
 
         // --- FUNGSI UMUM ---
         function saveInput(event) {
